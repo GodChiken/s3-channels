@@ -1,12 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.github.mentegy</groupId>
     <artifactId>s3-channels</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>jar</packaging>
     <name>S3 Channels</name>
     <description>Java NIO Channels implementations for S3</description>
@@ -24,7 +22,7 @@
         <url>https://github.com/mentegy/s3-channels</url>
         <connection>scm:git:git://github.com/mentegy/s3-channels.git</connection>
         <developerConnection>scm:git:git@github.com:mentegy/s3-channels.git</developerConnection>
-        <tag>HEAD</tag>
+        <tag>s3-channels-0.1.0</tag>
     </scm>
 
     <developers>
