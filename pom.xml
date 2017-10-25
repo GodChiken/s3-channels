@@ -4,7 +4,7 @@
 
     <groupId>io.github.mentegy</groupId>
     <artifactId>s3-channels</artifactId>
-    <version>0.1.2</version>
+    <version>0.1.3-SNAPSHOT</version>
     <packaging>jar</packaging>
     <name>S3 Channels</name>
     <description>Java NIO Channels implementations for S3</description>
@@ -22,7 +22,7 @@
         <url>https://github.com/mentegy/s3-channels</url>
         <connection>scm:git:git://github.com/mentegy/s3-channels.git</connection>
         <developerConnection>scm:git:git@github.com:mentegy/s3-channels.git</developerConnection>
-        <tag>s3-channels-0.1.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <developers>
