@@ -20,19 +20,19 @@ public class S3MultiPartUploadFileChannelBuilder {
 
     public S3MultiPartUploadFileChannel build() {
         if (bucket == null) {
-            throw new IllegalArgumentException("s3 bucket must be set");
+            throw new IllegalArgumentException("S3 bucket must be set");
         }
         if (uploadId == null) {
-            throw new IllegalArgumentException("multi-part upload id must be set");
+            throw new IllegalArgumentException("Multi-part upload id must be set");
         }
         if (key == null) {
-            throw new IllegalArgumentException("object key must be set");
+            throw new IllegalArgumentException("Object key must be set");
         }
         if (amazonS3 == null) {
-            throw new IllegalArgumentException("amazon s3 must be set");
+            throw new IllegalArgumentException("Amazon s3 must be set");
         }
         if (executorService == null) {
-            throw new IllegalArgumentException("executor service must be set");
+            throw new IllegalArgumentException("Executor service must be set");
         }
 
         return delayedHeader ?
@@ -75,7 +75,8 @@ public class S3MultiPartUploadFileChannelBuilder {
     }
 
     public S3MultiPartUploadFileChannelBuilder withDelayedHeader() {
-        return setDelayedHeader(true);
+        this.delayedHeader = true;
+        return this;
     }
 
     public String getKey() {
@@ -111,12 +112,8 @@ public class S3MultiPartUploadFileChannelBuilder {
         return this;
     }
 
-    public boolean isDelayedHeader() {
+    public boolean hasDelayedHeader() {
         return delayedHeader;
     }
 
-    public S3MultiPartUploadFileChannelBuilder setDelayedHeader(boolean delayedHeader) {
-        this.delayedHeader = delayedHeader;
-        return this;
-    }
 }

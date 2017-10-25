@@ -16,37 +16,44 @@ import java.util.concurrent.Executors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @Tag("s3")
-class S3MPUFileChannelIntTest extends S3IntegrationTest {
+class S3MPUDelayedHeaderFileChannelIntTest extends S3IntegrationTest {
 
-    private S3MPUFileChannel s3channel;
+    private S3MPUDelayedHeaderFileChannel s3channel;
     private String key;
     private FileGenerator.TempFile file;
     private final int chunkSize = 1000;
+    private final int headerSize = 128;
 
     private void initChannel(String fileKey) {
-        this.key = "S3MPUFileChannelIntTest/" + fileKey;
+        this.key = "S3MPUDelayedHeaderFileChannelIntTest/" + fileKey;
         defaultAmazonS3().deleteObject(testBucket(), this.key);
         InitiateMultipartUploadResult resp = defaultAmazonS3()
                 .initiateMultipartUpload(new InitiateMultipartUploadRequest(testBucket(), key));
 
-        // 3 parts of 5mb each + 2048 bytes for last part
-        file = FileGenerator.randomTempFile(5 * 1024 * 1024 * 3 + 2048);
+        // header + 3 parts of 5mb each + 2048 bytes for last part
+        file = FileGenerator.randomTempFile(headerSize + 5 * 1024 * 1024 * 3 + 2048);
 
-        s3channel = (S3MPUFileChannel) new S3MultiPartUploadFileChannelBuilder()
+        s3channel = (S3MPUDelayedHeaderFileChannel) new S3MultiPartUploadFileChannelBuilder()
                 .withAmazonS3(defaultAmazonS3())
                 .withExecutorService(Executors.newFixedThreadPool(4))
                 .withBucket(testBucket())
                 .withKey(key)
                 .withUploadId(resp.getUploadId())
+                .withDelayedHeader()
                 .build();
     }
 
     @Test
     void testAll() throws Exception {
         initChannel("testAll");
-        FileChannel fc = FileChannel.open(file.path, StandardOpenOption.READ);
-        ByteBuffer chunk = ByteBuffer.allocate(chunkSize);
-        int todo = (int) file.size;
+        final FileChannel fc = FileChannel.open(file.path, StandardOpenOption.READ);
+        final ByteBuffer chunk = ByteBuffer.allocate(chunkSize);
+
+        fc.position(headerSize);
+        s3channel.position(headerSize);
+        assertEquals(headerSize, s3channel.position());
+
+        int todo = (int) file.size - headerSize;
         while (todo >= chunkSize) {
             chunk.rewind();
             fc.read(chunk);
@@ -62,6 +69,17 @@ class S3MPUFileChannelIntTest extends S3IntegrationTest {
             chunk.rewind();
             assertEquals(todo, s3channel.write(chunk));
         }
+
+        ByteBuffer header = ByteBuffer.allocate(headerSize);
+        assertEquals(headerSize, fc.read(header, 0));
+
+        // simulate partial header write
+        header.position(0);
+        header.limit(50);
+        assertEquals(50, s3channel.write(header, 0));
+        header.limit(headerSize);
+        assertEquals(headerSize - 50, s3channel.write(header, 50));
+
         fc.close();
         s3channel.close();
 

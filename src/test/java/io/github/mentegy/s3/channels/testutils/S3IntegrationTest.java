@@ -6,6 +6,16 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.GetObjectRequest;
+import com.amazonaws.services.s3.model.ObjectMetadata;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 
 public abstract class S3IntegrationTest {
 
@@ -16,11 +26,11 @@ public abstract class S3IntegrationTest {
     private AmazonS3 amazonS3;
     private String bucket = "test-bucket";
 
-    public String getTestBucket() {
+    protected String testBucket() {
         return bucket;
     }
 
-    public AmazonS3 getDefaultAmazonS3() {
+    protected AmazonS3 defaultAmazonS3() {
         if (amazonS3 == null) {
             amazonS3 = createAmazonS3();
             try {
@@ -32,12 +42,28 @@ public abstract class S3IntegrationTest {
         return amazonS3;
     }
 
-    public AmazonS3 createAmazonS3() {
+    protected AmazonS3 createAmazonS3() {
         return AmazonS3ClientBuilder
                 .standard()
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .withEndpointConfiguration(new AwsClientBuilder.EndpointConfiguration(System.getenv("S3_HOST"), "eu-west"))
                 .withPathStyleAccessEnabled(true)
                 .build();
+    }
+
+    protected void verifyFileContentEquality(Path diskFile, String s3Key) throws IOException {
+        final Path tmp = Files.createTempFile("tmp", "" + s3Key.hashCode());
+        final ObjectMetadata obj = defaultAmazonS3().getObject(new GetObjectRequest(testBucket(), s3Key), tmp.toFile());
+
+        assertArrayEquals(Files.readAllBytes(diskFile), Files.readAllBytes(tmp));
+
+        Files.delete(tmp);
+    }
+
+    private final ThreadLocal<Random> rand = ThreadLocal.withInitial(Random::new);
+    protected ByteBuffer shuffleBuffer(ByteBuffer bf) {
+        bf.rewind();
+        rand.get().nextBytes(bf.array());
+        return bf;
     }
 }

@@ -70,7 +70,7 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
 
         if (pos < header.capacity()) {
             header.position(pos);
-            if (header.remaining() <= bytes) {
+            if (header.remaining() >= bytes) {
                 header.put(src);
                 pos += bytes;
                 return bytes;

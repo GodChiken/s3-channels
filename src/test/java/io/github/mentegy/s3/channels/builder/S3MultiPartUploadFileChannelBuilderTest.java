@@ -33,23 +33,23 @@ class S3MultiPartUploadFileChannelBuilderTest {
     @Test
     void testBuildNullArgs() {
         String msg = assertThrows(IllegalArgumentException.class, () -> builder.withKey(null).build()).getMessage();
-        assertEquals("object key must be set", msg);
+        assertEquals("Object key must be set", msg);
 
         initBuilder();
         msg = assertThrows(IllegalArgumentException.class, () -> builder.withBucket(null).build()).getMessage();
-        assertEquals("s3 bucket must be set", msg);
+        assertEquals("S3 bucket must be set", msg);
 
         initBuilder();
         msg = assertThrows(IllegalArgumentException.class, () -> builder.withUploadId(null).build()).getMessage();
-        assertEquals("multi-part upload id must be set", msg);
+        assertEquals("Multi-part upload id must be set", msg);
 
         initBuilder();
         msg = assertThrows(IllegalArgumentException.class, () -> builder.withExecutorService(null).build()).getMessage();
-        assertEquals("executor service must be set", msg);
+        assertEquals("Executor service must be set", msg);
 
         initBuilder();
         msg = assertThrows(IllegalArgumentException.class, () -> builder.withAmazonS3(null).build()).getMessage();
-        assertEquals("amazon s3 must be set", msg);
+        assertEquals("Amazon s3 must be set", msg);
     }
 
     @Test
