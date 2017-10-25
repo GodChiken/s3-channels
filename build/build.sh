@@ -21,7 +21,7 @@ then
 		git config --global user.email "ci@mentegy.github.io"
 		git config --global push.default matching
 		git remote set-url origin git@github.com:mentegy/s3-channels.git
-		git fetch --unshallow
+		git fetch
 		git checkout master || git checkout -b master
 		git reset --hard origin/master
 
@@ -29,8 +29,8 @@ then
 		git commit -m "[release] remove release.version"
 		git push
 
-		mvn -B clean release:prepare --settings build/settings.xml -DreleaseVersion=$RELEASE_VERSION
-		mvn release:perform --settings build/settings.xml
+		mvn -B clean release:prepare --settings build/settings.xml -DreleaseVersion=$RELEASE_VERSION -Darguments="-DskipTests"
+		mvn release:perform --settings build/settings.xml -Darguments="-DskipTests"
 	elif [[ $TRAVIS_BRANCH == "master" ]]
 	then
 		echo "Publishing a snapshot..."
