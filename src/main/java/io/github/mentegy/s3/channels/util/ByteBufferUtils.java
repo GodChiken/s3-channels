@@ -2,7 +2,7 @@ package io.github.mentegy.s3.channels.util;
 
 import java.nio.ByteBuffer;
 
-public class ByteBufferUtils {
+public final class ByteBufferUtils {
 
     public static int putBiggerBuffer(ByteBuffer dest, ByteBuffer src) {
         int srcLimit = src.limit();

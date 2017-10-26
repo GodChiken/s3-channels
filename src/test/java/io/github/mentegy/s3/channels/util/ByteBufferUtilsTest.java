@@ -27,5 +27,8 @@ class ByteBufferUtilsTest {
         assertEquals(4, bf2.position());
 
         assertArrayEquals(new byte[]{1, 2, 3, 4}, bf1.array());
+
+        // make cov happy
+        new ByteBufferUtils();
     }
 }
