@@ -1,5 +1,7 @@
 package io.github.mentegy.s3.channels.testutils;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -28,7 +30,7 @@ public class FileGenerator {
     }
 
 
-    public static class TempFile {
+    public static class TempFile implements Closeable {
         public final Path path;
         public final long size;
         public final byte[] md5;
@@ -37,6 +39,15 @@ public class FileGenerator {
             this.path = path;
             this.size = size;
             this.md5 = md5;
+        }
+
+        @Override
+        public void close() {
+            try {
+                Files.delete(path);
+            } catch (Exception ignored) {
+
+            }
         }
 
         @Override

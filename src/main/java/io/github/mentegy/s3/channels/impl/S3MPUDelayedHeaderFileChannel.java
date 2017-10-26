@@ -24,12 +24,12 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
     protected ByteBuffer header;
     protected final ConcurrentLinkedQueue<UploadPartResult> done = new ConcurrentLinkedQueue<>();
     protected final ConcurrentHashMap<Integer, CompletableFuture<Void>> workers = new ConcurrentHashMap<>();
-    protected volatile boolean cancellation = false;
+    protected volatile CompletableFuture<Void> cancellation;
     protected volatile Throwable error = null;
 
     public S3MPUDelayedHeaderFileChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
-                                         ExecutorService executor, boolean cancelOnFailureInDedicatedThread) {
-        super(key, bucket, uploadId, partSize, s3, executor, cancelOnFailureInDedicatedThread);
+                                         ExecutorService executor, boolean closeExecutorOnFinish) {
+        super(key, bucket, uploadId, partSize, s3, executor, closeExecutorOnFinish);
         this.header = ByteBuffer.allocate(this.partSize);
         this.partBody = ByteBuffer.allocate(this.partSize);
         this.id = 2;
@@ -38,7 +38,7 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
 
     /**
      * Writes data by given position without changing current position.
-     *
+     * <p>
      * Current implementation allows only to write data by position only for first 5MB (s3 part size) bytes.
      *
      * @throws IllegalStateException if input data and given position together overflows header buffer range
@@ -50,7 +50,7 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
         if (position + bytes > MIN_PART_SIZE) {
             throw new IllegalStateException("Input data does not fit within header");
         } else {
-            header.position((int)position);
+            header.position((int) position);
             header.put(src);
             return bytes;
         }
@@ -100,13 +100,13 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
      * If any error occurred during uploading of last parts or complete requests, the aborting of multipart upload
      * requests will be send to s3.
      * <p>
-     * If {@link S3MPUDelayedHeaderFileChannel#cancelOnFailureInDedicatedThread} is <code>true</code> then cancellation
-     * will be performing within another thread hence user will be proceeding with occurred error immediately
-     * without waiting on cancellation.
      */
     @Override
     @SuppressWarnings("unchecked")
-    protected void implCloseChannel() throws IOException {
+    protected void implCloseChannel() {
+        if (cancellation != null) {
+            return;
+        }
         uploadHeader();
         uploadLastPart();
         CompletableFuture<Void>[] futures;
@@ -124,21 +124,17 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
                     return null;
                 });
 
-        CompletableFuture<Void> handler = complete.handleAsync((res, err) -> {
-            if (err != null) {
-                cancel();
-            }
-            return null;
-        }, executor);
-
-        if (!cancelOnFailureInDedicatedThread) {
-            complete = handler;
-        }
-
         try {
             complete.get();
         } catch (Exception e) {
+            sendAbortRequest();
             throw new IllegalStateException("Exception during complete of multipart upload", e);
+        } finally {
+
+            if (closeExecutorOnFinish && !executor.isShutdown()) {
+                executor.shutdown();
+            }
+
         }
     }
 
@@ -146,8 +142,30 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
      * Aborts multipart upload
      */
     public void cancel() {
-        cancellation = true;
-        s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId));
+        if (cancellation == null) {
+            sendAbortRequest();
+        }
+        uncheckedClose();
+    }
+
+    /**
+     * @return {@code CompletableFuture<Void>} if cancellation started,
+     * {@code <null>} if
+     */
+    public CompletableFuture<Void> getCancellationTask() {
+        return cancellation;
+    }
+
+    private void uncheckedClose() {
+        try {
+            close();
+        } catch (IOException ignored) {
+        }
+    }
+
+    private void sendAbortRequest() {
+        cancellation = CompletableFuture.runAsync(() ->
+                s3.abortMultipartUpload(new AbortMultipartUploadRequest(bucket, key, uploadId)), executor);
     }
 
     protected void uploadHeader() {
@@ -191,11 +209,14 @@ public class S3MPUDelayedHeaderFileChannel extends S3MultiPartUploadFileChannel 
                     if (res != null) {
                         done.add(res);
                     }
-                    if (error != null && !cancellation) {
-                        if (retries < 3) startWorker(req, retries + 1);
-                        this.error = new IllegalStateException("Could not upload part " + id + " after "
-                                + retries + " retries. Aborting upload", error);
-                        cancel();
+                    if (error != null && cancellation == null) {
+                        if (retries < 3) {
+                            startWorker(req, retries + 1);
+                        } else {
+                            this.error = new IllegalStateException("Could not upload part " + id + " after "
+                                    + retries + " retries. Aborting upload", error);
+                            cancel();
+                        }
                     }
                     return null;
                 });

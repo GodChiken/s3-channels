@@ -17,23 +17,23 @@ public abstract class S3MultiPartUploadFileChannel extends FileChannel implement
     public static final int MAX_PARTS = 10_000;
     public static final int MIN_PART_SIZE = 5 * 1024 * 1024;
 
-    protected final String key;
-    protected final String bucket;
-    protected final String uploadId;
+    public final String key;
+    public final String bucket;
+    public final String uploadId;
     protected final int partSize;
     protected final AmazonS3 s3;
     protected final ExecutorService executor;
-    protected final boolean cancelOnFailureInDedicatedThread;
+    protected final boolean closeExecutorOnFinish;
 
     public S3MultiPartUploadFileChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
-                                        ExecutorService executor, boolean cancelOnFailureInDedicatedThread) {
+                                        ExecutorService executor, boolean closeExecutorOnFinish) {
         this.key = key;
         this.bucket = bucket;
         this.uploadId = uploadId;
         this.partSize = partSize >= MIN_PART_SIZE ? partSize : MIN_PART_SIZE;
         this.s3 = s3;
         this.executor = executor;
-        this.cancelOnFailureInDedicatedThread = cancelOnFailureInDedicatedThread;
+        this.closeExecutorOnFinish = closeExecutorOnFinish;
     }
 
     public static S3MultiPartUploadFileChannelBuilder builder() {

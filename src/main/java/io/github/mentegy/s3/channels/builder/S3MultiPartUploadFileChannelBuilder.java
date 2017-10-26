@@ -14,8 +14,8 @@ public class S3MultiPartUploadFileChannelBuilder {
     private int partSize = S3MultiPartUploadFileChannel.MIN_PART_SIZE;
     private AmazonS3 amazonS3;
     private ExecutorService executorService;
-    private boolean cancelOnFailureInDedicatedThread = true;
     private boolean delayedHeader = false;
+    private boolean closeExecutorOnFinish = false;
 
 
     public S3MultiPartUploadFileChannel build() {
@@ -36,8 +36,8 @@ public class S3MultiPartUploadFileChannelBuilder {
         }
 
         return delayedHeader ?
-                new S3MPUDelayedHeaderFileChannel(key, bucket, uploadId, partSize, amazonS3, executorService, cancelOnFailureInDedicatedThread) :
-                new S3MPUFileChannel(key, bucket, uploadId, partSize, amazonS3, executorService, cancelOnFailureInDedicatedThread);
+                new S3MPUDelayedHeaderFileChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnFinish) :
+                new S3MPUFileChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnFinish);
     }
 
     public S3MultiPartUploadFileChannelBuilder withKey(String key) {
@@ -70,12 +70,13 @@ public class S3MultiPartUploadFileChannelBuilder {
         return this;
     }
 
-    public S3MultiPartUploadFileChannelBuilder withBlockingCancelRequestOnCompletionFailure() {
-        return setCancelOnFailureInDedicatedThread(false);
-    }
-
     public S3MultiPartUploadFileChannelBuilder withDelayedHeader() {
         this.delayedHeader = true;
+        return this;
+    }
+
+    public S3MultiPartUploadFileChannelBuilder withClosingExecutorOnFinish() {
+        this.closeExecutorOnFinish = true;
         return this;
     }
 
@@ -103,17 +104,17 @@ public class S3MultiPartUploadFileChannelBuilder {
         return executorService;
     }
 
-    public boolean isCancelOnFailureInDedicatedThread() {
-        return cancelOnFailureInDedicatedThread;
-    }
-
-    public S3MultiPartUploadFileChannelBuilder setCancelOnFailureInDedicatedThread(boolean cancelOnFailureInDedicatedThread) {
-        this.cancelOnFailureInDedicatedThread = cancelOnFailureInDedicatedThread;
+    public S3MultiPartUploadFileChannelBuilder setCloseExecutorOnFinish(boolean closeExecutorOnFinish) {
+        this.closeExecutorOnFinish = closeExecutorOnFinish;
         return this;
     }
 
     public boolean hasDelayedHeader() {
         return delayedHeader;
+    }
+
+    public boolean isCloseExecutorOnFinish() {
+        return closeExecutorOnFinish;
     }
 
 }

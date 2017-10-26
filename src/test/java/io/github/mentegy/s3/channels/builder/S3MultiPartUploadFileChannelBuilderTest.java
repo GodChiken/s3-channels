@@ -1,6 +1,7 @@
 package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
+import io.github.mentegy.s3.channels.S3MultiPartUploadFileChannel;
 import io.github.mentegy.s3.channels.impl.S3MPUDelayedHeaderFileChannel;
 import io.github.mentegy.s3.channels.impl.S3MPUFileChannel;
 import org.junit.jupiter.api.BeforeEach;
@@ -9,8 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutorService;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 @Tag("fast")
@@ -56,5 +56,20 @@ class S3MultiPartUploadFileChannelBuilderTest {
     void testBuild() {
         assertEquals(S3MPUFileChannel.class, builder.build().getClass());
         assertEquals(S3MPUDelayedHeaderFileChannel.class, builder.withDelayedHeader().build().getClass());
+    }
+
+    @Test
+    void testGetters() {
+        assertEquals(S3MultiPartUploadFileChannel.MIN_PART_SIZE, builder.getPartSize());
+        assertEquals(123, builder.withPartSize(123).getPartSize());
+        assertEquals(amazonS3, builder.getAmazonS3());
+        assertEquals(executorService, builder.getExecutorService());
+        assertEquals("upldId", builder.getUploadId());
+        assertEquals("bucket", builder.getBucket());
+        assertEquals("key", builder.getKey());
+        assertFalse(builder.hasDelayedHeader());
+        assertTrue(builder.withClosingExecutorOnFinish().isCloseExecutorOnFinish());
+        assertFalse(builder.setCloseExecutorOnFinish(false).isCloseExecutorOnFinish());
+
     }
 }

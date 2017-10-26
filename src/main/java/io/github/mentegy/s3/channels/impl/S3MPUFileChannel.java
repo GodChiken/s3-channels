@@ -7,8 +7,8 @@ import java.util.concurrent.ExecutorService;
 
 public class S3MPUFileChannel extends S3MPUDelayedHeaderFileChannel {
     public S3MPUFileChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
-                            ExecutorService executor, boolean cancelOnFailureInDedicatedThread) {
-        super(key, bucket, uploadId, partSize, s3, executor, cancelOnFailureInDedicatedThread);
+                            ExecutorService executor, boolean closeExecutorOnFinish) {
+        super(key, bucket, uploadId, partSize, s3, executor, closeExecutorOnFinish);
         this.id = 1;
         this.header = ByteBuffer.allocate(0);
     }
