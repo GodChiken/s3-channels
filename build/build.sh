@@ -35,16 +35,16 @@ then
 	then
 		echo "Publishing a snapshot..."
 		eval $START_MINIO
-		mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package deploy --settings build/settings.xml
+		mvn clean package deploy --settings build/settings.xml
 
 	else
 		echo "Publishing a branch snapshot..."
 		mvn clean versions:set -DnewVersion=$TRAVIS_BRANCH-SNAPSHOT
 		eval $START_MINIO
-		mvn org.jacoco:jacoco-maven-plugin:prepare-agent package deploy --settings build/settings.xml
+		mvn package deploy --settings build/settings.xml
 	fi
 else
 	echo "Running build..."
 	eval $START_MINIO
-	mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package
+	mvn clean package
 fi
