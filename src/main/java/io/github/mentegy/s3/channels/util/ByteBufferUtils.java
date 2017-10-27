@@ -45,7 +45,10 @@ public final class ByteBufferUtils {
 
         int written = 0;
 
-        while ((read = src.read(chunk)) != -1 || dest.hasRemaining()) {
+        while ((read = src.read(chunk)) != -1) {
+            if (!dest.hasRemaining()) {
+                return written;
+            }
             if (read > dest.remaining()) {
                 read = dest.remaining();
             }

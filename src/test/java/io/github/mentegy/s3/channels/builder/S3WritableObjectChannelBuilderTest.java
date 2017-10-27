@@ -31,7 +31,8 @@ class S3WritableObjectChannelBuilderTest {
                 .bucket("bucket")
                 .uploadId("upldId")
                 .executorService(executorService)
-                .amazonS3(amazonS3);
+                .amazonS3(amazonS3)
+                .failedPartUploadRetries(2);
     }
 
     @Test
@@ -67,6 +68,7 @@ class S3WritableObjectChannelBuilderTest {
         assertEquals("upldId", builder.uploadId());
         assertEquals("bucket", builder.bucket());
         assertEquals("key", builder.key());
+        assertEquals(2, builder.failedPartUploadRetries());
         assertFalse(builder.hasDelayedHeader());
         assertFalse(builder.closeExecutorOnChannelClose());
         assertTrue(builder.defaultExecutorService().closeExecutorOnChannelClose());

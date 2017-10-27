@@ -112,6 +112,7 @@ class S3AppendableObjectChannelTest extends AbstractS3WritableObjectChannelSuite
         // test failed close
         final AmazonS3 mockedS3 = mock(AmazonS3.class);
         final S3WritableObjectChannelBuilder builder = defaultBuilder("id")
+                .closeExecutorOnChannelClose(false)
                 .amazonS3(mockedS3);
         s3channel = (S3AppendableObjectChannel) builder.build();
         when(mockedS3.completeMultipartUpload(any())).thenThrow(new TestException());

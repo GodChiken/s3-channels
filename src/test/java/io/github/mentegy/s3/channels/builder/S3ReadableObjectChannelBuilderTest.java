@@ -1,20 +1,30 @@
 package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import io.github.mentegy.s3.channels.impl.S3RangedReadObjectChannel;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 @Tag("fast")
 class S3ReadableObjectChannelBuilderTest {
 
-    private AmazonS3 amazonS3 = mock(AmazonS3.class);
+    private static AmazonS3 amazonS3 = mock(AmazonS3.class);
     private S3ReadableObjectChannelBuilder builder;
+
+    @BeforeAll
+    static void initMock() {
+        ObjectMetadata meta = new ObjectMetadata();
+        meta.setContentLength(100);
+        when(amazonS3.getObjectMetadata(anyString(), anyString()))
+                .thenReturn(meta);
+    }
 
     @BeforeEach
     void iLoveJavaVoid() {

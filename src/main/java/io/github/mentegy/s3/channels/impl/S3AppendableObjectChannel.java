@@ -7,6 +7,7 @@ import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
 import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.util.ByteBufferUtils;
+import io.github.mentegy.s3.channels.util.ExceptionUtils;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
@@ -159,17 +160,9 @@ public class S3AppendableObjectChannel extends S3WritableObjectChannel {
             complete.get();
         } catch (Exception e) {
             cancel();
-            if (e instanceof ExecutionException &&
-                    e.getCause() != null &&
-                    e.getCause() instanceof RuntimeException) {
-                throw (RuntimeException) e.getCause();
-            } else {
-                throw new RuntimeException(e);
-            }
+            throw ExceptionUtils.mapExecutionException(e);
         } finally {
-            if (closeExecutorOnClose) {
-                executor.shutdown();
-            }
+            tryCloseExecutor();
         }
     }
 
@@ -185,6 +178,12 @@ public class S3AppendableObjectChannel extends S3WritableObjectChannel {
             throw new IllegalStateException("Caught error during uploading part to s3", error);
         } else if (id > MAX_PARTS) {
             throw new IllegalStateException("Reached max allowed number of parts (10000)");
+        }
+    }
+
+    protected void tryCloseExecutor() {
+        if (closeExecutorOnClose) {
+            executor.shutdown();
         }
     }
 

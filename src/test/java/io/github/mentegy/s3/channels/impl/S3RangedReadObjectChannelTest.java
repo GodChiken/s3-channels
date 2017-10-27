@@ -31,6 +31,7 @@ class S3RangedReadObjectChannelTest extends AbstractS3Suite {
                 .bucket(testBucket)
                 .key(key)
                 .build();
+        assertEquals(s3Channel.size(), 1024);
     }
 
     @AfterAll
@@ -74,5 +75,19 @@ class S3RangedReadObjectChannelTest extends AbstractS3Suite {
 
         assertEquals(fc.read(bf1), s3Channel.read(bf2));
         assertArrayEquals(bf1.array(), bf2.array());
+
+        assertEquals(fc.position(), s3Channel.position());
+    }
+
+    @Test
+    void testUnsupported() {
+        assertThrows(UnsupportedOperationException.class, () -> s3Channel.truncate(1));
+        assertThrows(UnsupportedOperationException.class, () -> s3Channel.write(null));
+    }
+
+    @Test
+    void testPosition() {
+        assertEquals(s3Channel.position(), s3Channel.position(-1).position());
+        assertEquals(s3Channel.position(), s3Channel.position(s3Channel.size() + 123).position());
     }
 }
