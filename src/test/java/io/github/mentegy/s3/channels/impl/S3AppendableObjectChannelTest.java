@@ -2,7 +2,7 @@ package io.github.mentegy.s3.channels.impl;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.UploadPartRequest;
-import io.github.mentegy.s3.channels.builder.S3MultiPartUploadFileChannelBuilder;
+import io.github.mentegy.s3.channels.builder.S3WritableObjectChannelBuilder;
 import io.github.mentegy.s3.channels.testutils.FileGenerator;
 import io.github.mentegy.s3.channels.util.TestException;
 import org.junit.jupiter.api.Tag;
@@ -13,20 +13,20 @@ import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.ExecutorService;
 
-import static io.github.mentegy.s3.channels.S3MultiPartUploadChannel.MAX_PARTS;
-import static io.github.mentegy.s3.channels.S3MultiPartUploadChannel.MIN_PART_SIZE;
+import static io.github.mentegy.s3.channels.S3WritableObjectChannel.MAX_PARTS;
+import static io.github.mentegy.s3.channels.S3WritableObjectChannel.MIN_PART_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @Tag("s3")
-class S3MPUChannelTest extends AbstractS3MPUChannelSuite<S3MPUChannel> {
+class S3AppendableObjectChannelTest extends AbstractS3WritableObjectChannelSuite<S3AppendableObjectChannel> {
 
     private void initChannel(String fileKey) {
-        this.key = "S3MPUChannelTest/" + fileKey;
+        this.key = "S3AppendableObjectChannelTest/" + fileKey;
         // 3 parts of 5mb each + 2048 bytes for last part
         file = FileGenerator.randomTempFile(5 * 1024 * 1024 * 3 + 2048);
 
-        s3channel = (S3MPUChannel) defaultBuilder(initMultiPart().getUploadId()).build();
+        s3channel = (S3AppendableObjectChannel) defaultBuilder(initMultiPart().getUploadId()).build();
     }
 
     @Test
@@ -85,7 +85,7 @@ class S3MPUChannelTest extends AbstractS3MPUChannelSuite<S3MPUChannel> {
     @Test
     void testFailedUploadPart() throws Exception {
         final AmazonS3 mocked = mock(AmazonS3.class);
-        s3channel = (S3MPUChannel) defaultBuilder("id")
+        s3channel = (S3AppendableObjectChannel) defaultBuilder("id")
                 .failedPartUploadRetries(3)
                 .amazonS3(mocked)
                 .build();
@@ -111,9 +111,9 @@ class S3MPUChannelTest extends AbstractS3MPUChannelSuite<S3MPUChannel> {
     void testExecutionExceptionOnClose() throws Exception {
         // test failed close
         final AmazonS3 mockedS3 = mock(AmazonS3.class);
-        final S3MultiPartUploadFileChannelBuilder builder = defaultBuilder("id")
+        final S3WritableObjectChannelBuilder builder = defaultBuilder("id")
                 .amazonS3(mockedS3);
-        s3channel = (S3MPUChannel) builder.build();
+        s3channel = (S3AppendableObjectChannel) builder.build();
         when(mockedS3.completeMultipartUpload(any())).thenThrow(new TestException());
 
         assertThrows(TestException.class, () -> s3channel.close());
@@ -138,11 +138,11 @@ class S3MPUChannelTest extends AbstractS3MPUChannelSuite<S3MPUChannel> {
 
         doThrow(new OutOfMemoryError()).when(mockedES).execute(any());
 
-        final S3MultiPartUploadFileChannelBuilder builder = defaultBuilder("id")
+        final S3WritableObjectChannelBuilder builder = defaultBuilder("id")
                 .executorService(mockedES)
                 .closeExecutorOnChannelClose(false)
                 .amazonS3(mockedS3);
-        s3channel = (S3MPUChannel) builder.build();
+        s3channel = (S3AppendableObjectChannel) builder.build();
         assertThrows(RuntimeException.class, () -> s3channel.close());
         assertThrows(UnsupportedOperationException.class, () -> s3channel.truncate(-1));
         assertThrows(UnsupportedOperationException.class, () -> s3channel.truncate(123 + (long) Integer.MAX_VALUE));

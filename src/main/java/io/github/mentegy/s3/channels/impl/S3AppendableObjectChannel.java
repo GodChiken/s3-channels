@@ -5,14 +5,27 @@ import com.amazonaws.services.s3.model.AbortMultipartUploadRequest;
 import com.amazonaws.services.s3.model.CompleteMultipartUploadRequest;
 import com.amazonaws.services.s3.model.UploadPartRequest;
 import com.amazonaws.services.s3.model.UploadPartResult;
-import io.github.mentegy.s3.channels.S3MultiPartUploadChannel;
+import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.util.ByteBufferUtils;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.*;
 
-public class S3MPUChannel extends S3MultiPartUploadChannel {
+/**
+ * A write-only, stateful S3 object byte channel backed by S3 multi-part upload API.
+ * This channel is append-only, e.g. already written data could not be changed and
+ * position decreased.
+ * <p>
+ * Writes operation are non-blocking, e.g. caller does not wait on particular part
+ * to be uploaded into S3. The actual upload will be performed on dedicated thread
+ * only if part buffer is full-filled.
+ * <p>
+ * All operations are done on-the-fly, e.g. no sync with actual disk is made.
+ * <p>
+ * Not thread safe since maintaining current position
+ */
+public class S3AppendableObjectChannel extends S3WritableObjectChannel {
 
     protected final ConcurrentLinkedQueue<UploadPartResult> done = new ConcurrentLinkedQueue<>();
     protected final ConcurrentHashMap<Integer, CompletableFuture<Void>> workers = new ConcurrentHashMap<>();
@@ -23,8 +36,8 @@ public class S3MPUChannel extends S3MultiPartUploadChannel {
     protected volatile Throwable error = null;
     protected volatile boolean closed = false;
 
-    public S3MPUChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
-                        ExecutorService executor, boolean closeExecutorOnFinish, int failedPartUploadRetries) {
+    public S3AppendableObjectChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
+                                     ExecutorService executor, boolean closeExecutorOnFinish, int failedPartUploadRetries) {
         super(key, bucket, uploadId, partSize, s3, executor, closeExecutorOnFinish, failedPartUploadRetries);
         this.id = 1;
         this.partBody = ByteBuffer.allocate(this.partSize);
@@ -105,7 +118,7 @@ public class S3MPUChannel extends S3MultiPartUploadChannel {
     }
 
     @Override
-    public S3MultiPartUploadChannel position(long newPosition) {
+    public S3WritableObjectChannel position(long newPosition) {
         return this;
     }
 

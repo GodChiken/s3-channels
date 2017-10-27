@@ -1,18 +1,18 @@
 package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
-import io.github.mentegy.s3.channels.S3MultiPartUploadChannel;
-import io.github.mentegy.s3.channels.impl.S3MPUDelayedHeaderChannel;
-import io.github.mentegy.s3.channels.impl.S3MPUChannel;
+import io.github.mentegy.s3.channels.S3WritableObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class S3MultiPartUploadFileChannelBuilder {
+public class S3WritableObjectChannelBuilder {
     private String key;
     private String bucket;
     private String uploadId;
-    private int partSize = S3MultiPartUploadChannel.MIN_PART_SIZE;
+    private int partSize = S3WritableObjectChannel.MIN_PART_SIZE;
     private int failedPartUploadRetries;
     private AmazonS3 amazonS3;
     private ExecutorService executorService;
@@ -20,7 +20,7 @@ public class S3MultiPartUploadFileChannelBuilder {
     private boolean closeExecutorOnChannelClose = false;
 
 
-    public S3MultiPartUploadChannel build() {
+    public S3WritableObjectChannel build() {
         if (bucket == null) {
             throw new IllegalArgumentException("S3 bucket must be set");
         }
@@ -38,14 +38,14 @@ public class S3MultiPartUploadFileChannelBuilder {
         }
 
         return delayedHeader ?
-                new S3MPUDelayedHeaderChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnChannelClose, failedPartUploadRetries) :
-                new S3MPUChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnChannelClose, failedPartUploadRetries);
+                new S3AppendableDelayedHeaderObjectChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnChannelClose, failedPartUploadRetries) :
+                new S3AppendableObjectChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnChannelClose, failedPartUploadRetries);
     }
 
     /**
      * S3 object key
      */
-    public S3MultiPartUploadFileChannelBuilder key(String key) {
+    public S3WritableObjectChannelBuilder key(String key) {
         this.key = key;
         return this;
     }
@@ -53,7 +53,7 @@ public class S3MultiPartUploadFileChannelBuilder {
     /**
      * S3 bucket
      */
-    public S3MultiPartUploadFileChannelBuilder bucket(String bucket) {
+    public S3WritableObjectChannelBuilder bucket(String bucket) {
         this.bucket = bucket;
         return this;
     }
@@ -61,7 +61,7 @@ public class S3MultiPartUploadFileChannelBuilder {
     /**
      * S3 multi-part upload id
      */
-    public S3MultiPartUploadFileChannelBuilder uploadId(String uploadId) {
+    public S3WritableObjectChannelBuilder uploadId(String uploadId) {
         this.uploadId = uploadId;
         return this;
     }
@@ -72,7 +72,7 @@ public class S3MultiPartUploadFileChannelBuilder {
      *
      * Default 5MB
      */
-    public S3MultiPartUploadFileChannelBuilder partSize(int partSize) {
+    public S3WritableObjectChannelBuilder partSize(int partSize) {
         this.partSize = partSize;
         return this;
     }
@@ -83,7 +83,7 @@ public class S3MultiPartUploadFileChannelBuilder {
      *
      * Default 0
      */
-    public S3MultiPartUploadFileChannelBuilder failedPartUploadRetries(int failedPartUploadRetries) {
+    public S3WritableObjectChannelBuilder failedPartUploadRetries(int failedPartUploadRetries) {
         this.failedPartUploadRetries = failedPartUploadRetries;
         return this;
     }
@@ -91,7 +91,7 @@ public class S3MultiPartUploadFileChannelBuilder {
     /**
      * Amazon S3 client
      */
-    public S3MultiPartUploadFileChannelBuilder amazonS3(AmazonS3 amazonS3) {
+    public S3WritableObjectChannelBuilder amazonS3(AmazonS3 amazonS3) {
         this.amazonS3 = amazonS3;
         return this;
     }
@@ -99,7 +99,7 @@ public class S3MultiPartUploadFileChannelBuilder {
     /**
      * Executor service which takes care of uploading parts into S3.
      */
-    public S3MultiPartUploadFileChannelBuilder executorService(ExecutorService executorService) {
+    public S3WritableObjectChannelBuilder executorService(ExecutorService executorService) {
         this.executorService = executorService;
         return this;
     }
@@ -107,18 +107,18 @@ public class S3MultiPartUploadFileChannelBuilder {
     /**
      * Sets default executor service as FixedThreadPool with 4 threads
      */
-    public S3MultiPartUploadFileChannelBuilder defaultExecutorService() {
+    public S3WritableObjectChannelBuilder defaultExecutorService() {
         closeExecutorOnChannelClose(true);
         this.executorService = Executors.newFixedThreadPool(4);
         return this;
     }
 
     /**
-     * Whereas created instance should be {@link S3MPUDelayedHeaderChannel}
+     * Whereas created instance should be {@link S3AppendableDelayedHeaderObjectChannel}
      *
      * Default false
      */
-    public S3MultiPartUploadFileChannelBuilder delayedHeader(boolean delayedHeader) {
+    public S3WritableObjectChannelBuilder delayedHeader(boolean delayedHeader) {
         this.delayedHeader = delayedHeader;
         return this;
     }
@@ -126,7 +126,7 @@ public class S3MultiPartUploadFileChannelBuilder {
     /**
      * Whereas to close executor service on channel close
      */
-    public S3MultiPartUploadFileChannelBuilder closeExecutorOnChannelClose(boolean closeExecutorOnChannelClose) {
+    public S3WritableObjectChannelBuilder closeExecutorOnChannelClose(boolean closeExecutorOnChannelClose) {
         this.closeExecutorOnChannelClose = closeExecutorOnChannelClose;
         return this;
     }

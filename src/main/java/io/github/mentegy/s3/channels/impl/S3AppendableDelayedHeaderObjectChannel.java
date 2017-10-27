@@ -1,19 +1,26 @@
 package io.github.mentegy.s3.channels.impl;
 
 import com.amazonaws.services.s3.AmazonS3;
-import io.github.mentegy.s3.channels.S3MultiPartUploadChannel;
+import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.util.ByteBufferUtils;
 
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 
-public class S3MPUDelayedHeaderChannel extends S3MPUChannel {
+/**
+ * Extends {@link S3AppendableObjectChannel} by adding possibility to write delayed header.
+ * Please refer parent implementation for more details.
+ * <p>
+ * Header size is always equal to the size of regular part. It will be uploaded together with
+ * last part on {@link S3AppendableDelayedHeaderObjectChannel#close} call.
+ */
+public class S3AppendableDelayedHeaderObjectChannel extends S3AppendableObjectChannel {
 
     protected ByteBuffer header;
     protected long size;
 
-    public S3MPUDelayedHeaderChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
-                                     ExecutorService executor, boolean closeExecutorOnFinish, int failedPartUploadRetries) {
+    public S3AppendableDelayedHeaderObjectChannel(String key, String bucket, String uploadId, int partSize, AmazonS3 s3,
+                                                  ExecutorService executor, boolean closeExecutorOnFinish, int failedPartUploadRetries) {
         super(key, bucket, uploadId, partSize, s3, executor, closeExecutorOnFinish, failedPartUploadRetries);
         this.header = ByteBuffer.allocate(this.partSize);
         this.partBody = ByteBuffer.allocate(this.partSize);
@@ -83,7 +90,7 @@ public class S3MPUDelayedHeaderChannel extends S3MPUChannel {
     }
 
     @Override
-    public S3MultiPartUploadChannel position(long newPosition) {
+    public S3WritableObjectChannel position(long newPosition) {
         if (newPosition > size) {
             pos = size;
             truncate(newPosition - size);

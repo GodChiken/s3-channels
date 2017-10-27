@@ -1,10 +1,9 @@
 package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
-import io.github.mentegy.s3.channels.S3MultiPartUploadChannel;
-import io.github.mentegy.s3.channels.impl.S3MPUChannel;
-import io.github.mentegy.s3.channels.impl.S3MPUDelayedHeaderChannel;
-import org.junit.jupiter.api.BeforeAll;
+import io.github.mentegy.s3.channels.S3WritableObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -15,19 +14,19 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 @Tag("fast")
-class S3MultiPartUploadChannelBuilderTest {
+class S3WritableObjectChannelBuilderTest {
 
     private AmazonS3 amazonS3 = mock(AmazonS3.class);
     private ExecutorService executorService = mock(ExecutorService.class);
-    private S3MultiPartUploadFileChannelBuilder builder;
+    private S3WritableObjectChannelBuilder builder;
 
     @BeforeEach
     void iLoveJavaVoid() {
         builder = newBuilder();
     }
 
-    private S3MultiPartUploadFileChannelBuilder newBuilder() {
-        return new S3MultiPartUploadFileChannelBuilder()
+    private S3WritableObjectChannelBuilder newBuilder() {
+        return new S3WritableObjectChannelBuilder()
                 .key("key")
                 .bucket("bucket")
                 .uploadId("upldId")
@@ -55,13 +54,13 @@ class S3MultiPartUploadChannelBuilderTest {
 
     @Test
     void testBuild() {
-        assertEquals(S3MPUChannel.class, builder.build().getClass());
-        assertEquals(S3MPUDelayedHeaderChannel.class, builder.delayedHeader(true).build().getClass());
+        assertEquals(S3AppendableObjectChannel.class, builder.build().getClass());
+        assertEquals(S3AppendableDelayedHeaderObjectChannel.class, builder.delayedHeader(true).build().getClass());
     }
 
     @Test
     void testGetters() {
-        assertEquals(S3MultiPartUploadChannel.MIN_PART_SIZE, builder.getPartSize());
+        assertEquals(S3WritableObjectChannel.MIN_PART_SIZE, builder.getPartSize());
         assertEquals(123, builder.partSize(123).getPartSize());
         assertEquals(amazonS3, builder.amazonS3());
         assertEquals(executorService, builder.executorService());

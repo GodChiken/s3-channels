@@ -1,6 +1,6 @@
 package io.github.mentegy.s3.channels.impl;
 
-import io.github.mentegy.s3.channels.S3MultiPartUploadChannel;
+import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.testutils.FileGenerator;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -9,19 +9,19 @@ import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.StandardOpenOption;
 
-import static io.github.mentegy.s3.channels.S3MultiPartUploadChannel.MIN_PART_SIZE;
+import static io.github.mentegy.s3.channels.S3WritableObjectChannel.MIN_PART_SIZE;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("s3")
-class S3MPUDelayedHeaderChannelTest extends AbstractS3MPUChannelSuite<S3MPUDelayedHeaderChannel> {
+class S3AppendableDelayedHeaderObjectChannelTest extends AbstractS3WritableObjectChannelSuite<S3AppendableDelayedHeaderObjectChannel> {
 
     private void initChannel(String fileKey) {
-        this.key = "S3MPUDelayedHeaderChannelTest/" + fileKey;
+        this.key = "S3AppendableDelayedHeaderObjectChannelTest/" + fileKey;
 
         // header + 3 parts of 5mb each + 2048 bytes for last part
         file = FileGenerator.randomTempFile(headerSize + MIN_PART_SIZE * 3 + 2048);
 
-        s3channel = (S3MPUDelayedHeaderChannel) defaultBuilder(initMultiPart().getUploadId())
+        s3channel = (S3AppendableDelayedHeaderObjectChannel) defaultBuilder(initMultiPart().getUploadId())
                 .delayedHeader(true)
                 .build();
     }
@@ -31,7 +31,7 @@ class S3MPUDelayedHeaderChannelTest extends AbstractS3MPUChannelSuite<S3MPUDelay
         initChannel("testAll");
 
         assertTrue(s3channel.hasDelayedHeader());
-        assertEquals(S3MultiPartUploadChannel.MIN_PART_SIZE, s3channel.headerSize());
+        assertEquals(S3WritableObjectChannel.MIN_PART_SIZE, s3channel.headerSize());
 
         final FileChannel fc = FileChannel.open(file.path, StandardOpenOption.READ);
         final ByteBuffer chunk = ByteBuffer.allocate(chunkSize);
