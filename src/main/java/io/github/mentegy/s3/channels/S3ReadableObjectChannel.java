@@ -1,6 +1,7 @@
 package io.github.mentegy.s3.channels;
 
 import com.amazonaws.services.s3.AmazonS3;
+import io.github.mentegy.s3.channels.builder.S3ReadableObjectChannelBuilder;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -25,6 +26,15 @@ public abstract class S3ReadableObjectChannel implements SeekableByteChannel {
         this.key = key;
         this.bucket = bucket;
         this.s3 = s3;
+    }
+
+    /**
+     * Creates empty builder
+     *
+     * @return this channel's builder
+     */
+    public static S3ReadableObjectChannelBuilder builder() {
+        return new S3ReadableObjectChannelBuilder();
     }
 
     /**

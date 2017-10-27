@@ -1,11 +1,9 @@
 package io.github.mentegy.s3.channels.impl;
 
+import io.github.mentegy.s3.channels.S3ReadableObjectChannel;
 import io.github.mentegy.s3.channels.testutils.AbstractS3Suite;
 import io.github.mentegy.s3.channels.testutils.FileGenerator;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -16,18 +14,23 @@ import java.nio.file.StandardOpenOption;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("s3")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class S3RangedReadObjectChannelTest extends AbstractS3Suite {
+    final String key = "S3RangedReadObjectChannelTest";
     FileGenerator.TempFile file;
     FileChannel fc;
-    S3RangedReadObjectChannel s3Channel;
-    final String key = "S3RangedReadObjectChannelTest";
+    S3ReadableObjectChannel s3Channel;
 
     @BeforeAll
     void beforeAll() throws IOException {
         file = FileGenerator.randomTempFile(1024);
-        fc =  FileChannel.open(file.path, StandardOpenOption.READ);
+        fc = FileChannel.open(file.path, StandardOpenOption.READ);
         defaultAmazonS3().putObject(testBucket, key, file.path.toFile());
-        s3Channel = new S3RangedReadObjectChannel(key, testBucket, defaultAmazonS3());
+        s3Channel = S3ReadableObjectChannel.builder()
+                .amazonS3(defaultAmazonS3())
+                .bucket(testBucket)
+                .key(key)
+                .build();
     }
 
     @AfterAll
