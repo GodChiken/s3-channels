@@ -8,7 +8,7 @@
     <packaging>jar</packaging>
     <name>S3 Channels</name>
     <description>Java NIO Channels implementations for S3</description>
-    <url>https://github.com/mentegy/s3-channels</url>
+    <url>https://mentegy.github.io/s3-channels</url>
 
     <licenses>
         <license>
