@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
+
 import static io.github.mentegy.s3.channels.util.ByteBufferUtils.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @Tag("fast")
 class ByteBufferUtilsTest {
@@ -38,27 +40,33 @@ class ByteBufferUtilsTest {
     void testPutBiggerBufferButNotActuallyBigger() {
         ByteBuffer bf1 = ByteBuffer.allocate(4);
         ByteBuffer bf2 =  ByteBuffer.allocate(2);
-        assertThrows(IllegalArgumentException.class, () -> ByteBufferUtils.putBiggerBuffer(bf1, bf2));
+        assertEquals(2, ByteBufferUtils.putBiggerBuffer(bf1, bf2));
+        assertEquals(2, bf1.remaining());
     }
 
     @Test
     void testReadFromInputStream() throws IOException {
-        InputStream is1 = new InputStream() {
+        InputStream is = new InputStream() {
             @Override
             public int read() throws IOException {
                 return 1;
             }
         };
-        assertEquals(_16_KB + 250, readFromInputStream(is1, ByteBuffer.allocate(_16_KB + 250)));
+        assertEquals(_16_KB + 250, readFromInputStream(is, ByteBuffer.allocate(_16_KB + 250)));
 
-        InputStream is2 = new InputStream() {
+        is = new InputStream() {
             int todo = 50;
             @Override
             public int read() throws IOException {
                 return todo > 0 ? todo-- : -1;
             }
         };
-        assertEquals(50, readFromInputStream(is2, ByteBuffer.allocate(100)));
+        assertEquals(50, readFromInputStream(is, ByteBuffer.allocate(100)));
 
+        InputStream mocked = mock(InputStream.class);
+        when(mocked.read(any())).thenThrow(new RuntimeException());
+        assertThrows(RuntimeException.class, () -> readFromInputStream(mocked, ByteBuffer.allocate(10), true));
+        assertThrows(RuntimeException.class, () -> readFromInputStream(mocked, ByteBuffer.allocate(10), false));
+        verify(mocked, times(1)).close();
     }
 }

@@ -2,12 +2,14 @@ package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
 import io.github.mentegy.s3.channels.S3ReadableObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3BufferedRangedReadObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3RangedReadObjectChannel;
 
 public class S3ReadableObjectChannelBuilder {
     private String key;
     private String bucket;
     private AmazonS3 amazonS3;
+    private Integer bufferSize;
 
 
     public S3ReadableObjectChannel build() {
@@ -20,7 +22,9 @@ public class S3ReadableObjectChannelBuilder {
         if (amazonS3 == null) {
             throw new IllegalArgumentException("Amazon s3 must be set");
         }
-        return new S3RangedReadObjectChannel(key, bucket, amazonS3);
+        return bufferSize == null ?
+                new S3RangedReadObjectChannel(key, bucket, amazonS3) :
+                new S3BufferedRangedReadObjectChannel(key, bucket, amazonS3, bufferSize);
     }
 
     /**
@@ -47,6 +51,10 @@ public class S3ReadableObjectChannelBuilder {
         return this;
     }
 
+    public S3ReadableObjectChannelBuilder buffered(Integer bufferSize) {
+        this.bufferSize = bufferSize;
+        return this;
+    }
 
     public String key() {
         return key;
@@ -58,5 +66,13 @@ public class S3ReadableObjectChannelBuilder {
 
     public AmazonS3 amazonS3() {
         return amazonS3;
+    }
+
+    public boolean isBuffered() {
+        return bufferSize != null;
+    }
+
+    public Integer bufferSize() {
+        return bufferSize;
     }
 }

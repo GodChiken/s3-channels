@@ -12,16 +12,16 @@ public final class ByteBufferUtils {
      * Writes bigger source buffer into destination since regular Java ByteBuffer API does not alow this.
      *
      * @param dest destination buffer
-     * @param src source buffer
+     * @param src  source buffer
      * @return amount of written bytes into destination
-     * @throws IllegalArgumentException if source buffer is not bigger than destination
      */
     public static int putBiggerBuffer(ByteBuffer dest, ByteBuffer src) {
-        if (dest.remaining() > src.remaining()) {
-            throw new IllegalArgumentException("source buffer is not bigger than destination. Use regular put instead");
+        int written = dest.remaining();
+        if (dest.remaining() >= src.remaining()) {
+            dest.put(src);
+            return written - dest.remaining();
         }
         int srcLimit = src.limit();
-        int written = dest.remaining();
         src.limit(written);
         dest.put(src);
         src.limit(srcLimit);
@@ -33,29 +33,41 @@ public final class ByteBufferUtils {
      * This helper does not overflow destination byte buffer.
      * Bytes are read until input stream have those or until byte buffer has remaining space for them.
      *
-     * @param src source input stream
-     * @param dest destination byte buffer
+     * @param src         source input stream
+     * @param dest        destination byte buffer
+     * @param closeStream whereas to close src input stream
      * @return number of read (from input stream) / written (to buffer) bytes
      * @throws IOException - if any error occurs during input stream read
      */
-    public static int readFromInputStream(InputStream src, ByteBuffer dest) throws IOException {
-        int chunkSize = dest.remaining() > _16_KB ? _16_KB : dest.remaining();
-        byte[] chunk = new byte[chunkSize];
-        int read;
+    public static int readFromInputStream(InputStream src, ByteBuffer dest, boolean closeStream) throws IOException {
+        try {
+            int chunkSize = dest.remaining() > _16_KB ? _16_KB : dest.remaining();
 
-        int written = 0;
+            byte[] chunk = new byte[chunkSize];
+            int read;
 
-        while ((read = src.read(chunk)) != -1) {
-            if (!dest.hasRemaining()) {
-                return written;
+            int written = 0;
+
+            while ((read = src.read(chunk)) != -1) {
+                if (!dest.hasRemaining()) {
+                    return written;
+                }
+                if (read > dest.remaining()) {
+                    read = dest.remaining();
+                }
+                written += read;
+                dest.put(chunk, 0, read);
             }
-            if (read > dest.remaining()) {
-                read = dest.remaining();
+
+            return written;
+        } finally {
+            if (closeStream) {
+                src.close();
             }
-            written += read;
-            dest.put(chunk, 0, read);
         }
+    }
 
-        return written;
+    public static int readFromInputStream(InputStream src, ByteBuffer dest) throws IOException {
+        return readFromInputStream(src, dest, false);
     }
 }

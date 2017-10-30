@@ -38,8 +38,9 @@ class S3RangedReadObjectChannelTest extends AbstractS3Suite {
     void afterAll() throws IOException {
         fc.close();
         Files.delete(file.path);
-        assertTrue(s3Channel.isOpen()); // always true
-        s3Channel.close(); // no effect
+        assertTrue(s3Channel.isOpen());
+        s3Channel.close();
+        assertFalse(s3Channel.isOpen());
     }
 
     @Test
@@ -77,6 +78,13 @@ class S3RangedReadObjectChannelTest extends AbstractS3Suite {
         assertArrayEquals(bf1.array(), bf2.array());
 
         assertEquals(fc.position(), s3Channel.position());
+    }
+
+    @Test
+    void testHasNoRemaining() throws IOException{
+        ByteBuffer b = ByteBuffer.allocate(25);
+        b.position(25);
+        assertEquals(0, s3Channel.read(b));
     }
 
     @Test

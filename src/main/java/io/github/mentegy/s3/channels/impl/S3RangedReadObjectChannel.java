@@ -22,7 +22,7 @@ import java.nio.ByteBuffer;
  */
 public class S3RangedReadObjectChannel extends S3ReadableObjectChannel {
 
-    protected final ObjectMetadata metadata;
+    protected ObjectMetadata metadata;
     protected final long size;
     protected long pos;
 
@@ -34,11 +34,12 @@ public class S3RangedReadObjectChannel extends S3ReadableObjectChannel {
 
     @Override
     public int read(ByteBuffer dst, long position) throws IOException {
+        if (!dst.hasRemaining()) {
+            return 0;
+        }
         S3Object object = s3.getObject(new GetObjectRequest(bucket, key)
                 .withRange(position, position + dst.remaining()));
-        int read = ByteBufferUtils.readFromInputStream(object.getObjectContent(), dst);
-        object.close();
-        return read;
+        return ByteBufferUtils.readFromInputStream(object.getObjectContent(), dst, true);
     }
 
     @Override
@@ -68,11 +69,11 @@ public class S3RangedReadObjectChannel extends S3ReadableObjectChannel {
 
     @Override
     public boolean isOpen() {
-        return true;
+        return metadata != null;
     }
 
     @Override
     public void close() {
-        // stateless channel
+        metadata = null;
     }
 }
