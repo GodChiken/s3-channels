@@ -17,12 +17,12 @@ Firstly, let's add dependencies to our faivorite build tool, for example:
 <dependency>
     <groupId>io.github.mentegy</groupId>
     <artifactId>s3-channels</artifactId>
-    <version>0.2.0</version>
+    <version>0.2.1</version>
 </dependency>
 ```
 ### sbt dependency
 ```scala
-libraryDependencies += "io.github.mentegy" % "s3-channels" % "0.2.0"
+libraryDependencies += "io.github.mentegy" % "s3-channels" % "0.2.1"
 ```
 
 ### Examples
