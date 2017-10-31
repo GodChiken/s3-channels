@@ -2,8 +2,8 @@ package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
 import io.github.mentegy.s3.channels.S3WritableObjectChannel;
-import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -71,7 +71,7 @@ class S3WritableObjectChannelBuilderTest {
         assertEquals(2, builder.failedPartUploadRetries());
         assertFalse(builder.hasDelayedHeader());
         assertFalse(builder.closeExecutorOnChannelClose());
-        assertTrue(builder.defaultExecutorService().closeExecutorOnChannelClose());
+        assertTrue(builder.defaultCachedThreadPoolExecutor().closeExecutorOnChannelClose());
         builder.executorService().shutdown();
     }
 }

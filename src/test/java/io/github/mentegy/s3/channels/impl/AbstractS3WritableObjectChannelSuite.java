@@ -32,7 +32,7 @@ public abstract class AbstractS3WritableObjectChannelSuite<T extends S3WritableO
     protected S3WritableObjectChannelBuilder defaultBuilder(String uploadId) {
         return S3WritableObjectChannel.builder()
                 .amazonS3(defaultAmazonS3())
-                .defaultExecutorService()
+                .defaultCachedThreadPoolExecutor()
                 .bucket(testBucket)
                 .key(key == null ? "key" : key)
                 .uploadId(uploadId);

@@ -105,11 +105,11 @@ public class S3WritableObjectChannelBuilder {
     }
 
     /**
-     * Sets default executor service as FixedThreadPool with 4 threads
+     * Sets default executor service as CachedThreadPool
      */
-    public S3WritableObjectChannelBuilder defaultExecutorService() {
+    public S3WritableObjectChannelBuilder defaultCachedThreadPoolExecutor() {
         closeExecutorOnChannelClose(true);
-        this.executorService = Executors.newFixedThreadPool(4);
+        this.executorService = Executors.newCachedThreadPool();
         return this;
     }
 
