@@ -53,7 +53,7 @@ class S3AppendableObjectChannelTest extends AbstractS3WritableObjectChannelSuite
             assertEquals(todo, fc.read(chunk));
             assertEquals(fc.position(), fc.size());
             chunk.rewind();
-            assertEquals(todo, s3channel.write(chunk));
+            assertEquals(todo, s3channel.write(new ByteBuffer[] { chunk }));
         }
 
         // setting lower position does not make any effect

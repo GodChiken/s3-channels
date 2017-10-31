@@ -5,11 +5,13 @@ import io.github.mentegy.s3.channels.builder.S3WritableObjectChannelBuilder;
 import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
 
 import java.nio.ByteBuffer;
+import java.nio.channels.GatheringByteChannel;
 import java.nio.channels.SeekableByteChannel;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
-public abstract class S3WritableObjectChannel implements SeekableByteChannel, AsynchronousCancellable<Void> {
+public abstract class S3WritableObjectChannel
+        implements SeekableByteChannel, GatheringByteChannel, AsynchronousCancellable<Void> {
 
     public static final int MAX_PARTS = 10_000;
     public static final int MIN_PART_SIZE = 5 * 1024 * 1024;
@@ -192,6 +194,35 @@ public abstract class S3WritableObjectChannel implements SeekableByteChannel, As
         }
         skip((int) (size - position()));
         return this;
+    }
+
+    /**
+     * Writes a sequence of bytes to this channel from a subsequence of the
+     * given buffers.
+     *
+     * @param srcs - given buffers
+     * @param offset - the offset within the buffers array
+     * @param length - buffers array length
+     * @return written bytes
+     */
+    @Override
+    public long write(ByteBuffer[] srcs, int offset, int length) {
+        long written = 0;
+        for (int i = offset; i < length; i++) {
+            written += this.write(srcs[i]);
+        }
+        return written;
+    }
+
+    /**
+     * Writes a sequence of bytes to this channel from the given buffers.
+     *
+     * @param srcs - given buffers
+     * @return written bytes
+     */
+    @Override
+    public long write(ByteBuffer[] srcs) {
+        return write(srcs, 0, srcs.length);
     }
 
     /**

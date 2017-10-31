@@ -55,7 +55,7 @@ class S3AppendableDelayedHeaderObjectChannelTest extends AbstractS3WritableObjec
             assertEquals(todo, fc.read(chunk));
             assertEquals(fc.position(), fc.size());
             chunk.rewind();
-            assertEquals(todo, s3channel.write(chunk));
+            assertEquals(todo, s3channel.write(new ByteBuffer[] { null, chunk }, 1, 2));
         }
 
         ByteBuffer header = ByteBuffer.allocate(headerSize);
