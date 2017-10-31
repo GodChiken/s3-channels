@@ -1,6 +1,7 @@
 package io.github.mentegy.s3.channels.builder;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
@@ -72,6 +73,16 @@ class S3WritableObjectChannelBuilderTest {
         assertFalse(builder.hasDelayedHeader());
         assertFalse(builder.closeExecutorOnChannelClose());
         assertTrue(builder.defaultCachedThreadPoolExecutor().closeExecutorOnChannelClose());
+
+        InitiateMultipartUploadResult r = new InitiateMultipartUploadResult();
+        r.setBucketName("bucket1");
+        r.setKey("key1");
+        r.setUploadId("upldId1");
+        builder.initiateMultipartUploadResult(r);
+        assertEquals("upldId1", builder.uploadId());
+        assertEquals("bucket1", builder.bucket());
+        assertEquals("key1", builder.key());
+
         builder.executorService().shutdown();
     }
 }

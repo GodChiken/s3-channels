@@ -65,15 +65,13 @@ import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import java.nio.ByteBuffer;
 
 ByteBuffer buffer = ByteBuffer.allocate(1024);
-String uploadId = s3
-        .initiateMultipartUpload(new InitiateMultipartUploadRequest(testBucket, key))
-        .getUploadId();
+InitiateMultipartUploadResult upload = s3
+        .initiateMultipartUpload(new InitiateMultipartUploadRequest(testBucket, key));
+
 S3WritableObjectChannel channel S3WritableObjectChannel.builder()
         .amazonS3(s3)
         .defaultExecutorService()
-        .bucket(bucket)
-        .key(key)
-        .uploadId(uploadId);
+        .initiateMultipartUploadResult(upload); // sets key, bucket, upload id for you
         
 channel.write(buffer);
 // ...
