@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3WritableObjectChannelAsFileChannel;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -20,7 +21,11 @@ public class S3WritableObjectChannelBuilder {
     private boolean delayedHeader = false;
     private boolean closeExecutorOnChannelClose = false;
 
-
+    /**
+     * Builds instance of {@link S3WritableObjectChannel}
+     * @return if {@link this#delayedHeader} is {@code true} then {@link S3AppendableDelayedHeaderObjectChannel},
+     *         otherwise - {@link S3AppendableObjectChannel}
+     */
     public S3WritableObjectChannel build() {
         if (bucket == null) {
             throw new IllegalArgumentException("S3 bucket must be set");
@@ -43,6 +48,19 @@ public class S3WritableObjectChannelBuilder {
                 new S3AppendableObjectChannel(key, bucket, uploadId, partSize, amazonS3, executorService, closeExecutorOnChannelClose, failedPartUploadRetries);
     }
 
+    /**
+     * Wraps built {@link S3WritableObjectChannel} with {@link S3WritableObjectChannelAsFileChannel}
+     *
+     * Note, {@link S3WritableObjectChannelAsFileChannel} extends {@link java.nio.channels.FileChannel}
+     * @return {@link S3WritableObjectChannelAsFileChannel}
+     */
+    public S3WritableObjectChannelAsFileChannel buildAsFileChannel() {
+        return new S3WritableObjectChannelAsFileChannel(build());
+    }
+
+    /**
+     * Retrieves bucket, key and uploadId from {@link InitiateMultipartUploadResult}
+     */
     public S3WritableObjectChannelBuilder initiateMultipartUploadResult(InitiateMultipartUploadResult result) {
         bucket(result.getBucketName());
         key(result.getKey());

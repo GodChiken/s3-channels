@@ -40,13 +40,13 @@ public class S3AppendableDelayedHeaderObjectChannel extends S3AppendableObjectCh
     }
 
     @Override
-    public int write(ByteBuffer src, int position) {
+    public int write(ByteBuffer src, long position) {
         checkOnError();
         int bytes = src.remaining();
         if (position + bytes > header.limit()) {
-            throw new BufferNotFitInHeaderException(bytes, position, header.limit());
+            throw new BufferNotFitInHeaderException(bytes, (int)position, header.limit());
         } else {
-            header.position(position);
+            header.position((int)position);
             header.put(src);
             return bytes;
         }

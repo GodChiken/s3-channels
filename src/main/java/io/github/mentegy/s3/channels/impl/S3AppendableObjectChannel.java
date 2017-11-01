@@ -11,7 +11,10 @@ import io.github.mentegy.s3.channels.util.ExceptionUtils;
 
 import java.io.ByteArrayInputStream;
 import java.nio.ByteBuffer;
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
 
 /**
  * A write-only, stateful S3 object byte channel backed by S3 multi-part upload API.
@@ -55,7 +58,7 @@ public class S3AppendableObjectChannel extends S3WritableObjectChannel {
     }
 
     @Override
-    public int write(ByteBuffer src, int position) {
+    public int write(ByteBuffer src, long position) {
         throw new UnsupportedOperationException();
     }
 

@@ -110,7 +110,7 @@ public abstract class S3WritableObjectChannel
      * @return written bytes
      * @throws UnsupportedOperationException if this instance is not {@link S3AppendableDelayedHeaderObjectChannel}
      */
-    public abstract int write(ByteBuffer src, int position);
+    public abstract int write(ByteBuffer src, long position);
 
     /**
      * Sets this channel's position.

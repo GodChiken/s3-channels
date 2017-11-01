@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.InitiateMultipartUploadResult;
 import io.github.mentegy.s3.channels.S3WritableObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableDelayedHeaderObjectChannel;
 import io.github.mentegy.s3.channels.impl.S3AppendableObjectChannel;
+import io.github.mentegy.s3.channels.impl.S3WritableObjectChannelAsFileChannel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -58,6 +59,7 @@ class S3WritableObjectChannelBuilderTest {
     void testBuild() {
         assertEquals(S3AppendableObjectChannel.class, builder.build().getClass());
         assertEquals(S3AppendableDelayedHeaderObjectChannel.class, builder.delayedHeader(true).build().getClass());
+        assertEquals(S3WritableObjectChannelAsFileChannel.class, builder.buildAsFileChannel().getClass());
     }
 
     @Test
